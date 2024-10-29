@@ -27,9 +27,9 @@ object RevenueCatManager : PaywallResultHandler {
             .build()
         Purchases.configure(config)
 
-        Purchases.sharedInstance.setAttributes(
-            mapOf("package_name" to (context.packageName.takeIf { it.isNotBlank() } ?: "unknown"))
-        )
+            Purchases.sharedInstance.setAttributes(
+                mapOf("package_name" to (context.packageName.takeIf { it.isNotBlank() } ?: "unknown"))
+            )
 
         isInitialized = true
     }
