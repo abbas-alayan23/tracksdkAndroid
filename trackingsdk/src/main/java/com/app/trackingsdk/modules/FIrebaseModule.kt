@@ -17,6 +17,7 @@ import com.google.firebase.remoteconfig.FirebaseRemoteConfigSettings
 // FirebaseModule.kt
 object FirebaseModule {
     private var isInitialized = false
+    private const val LOG_TAG = "FirebaseModule"
 
     private lateinit var firebaseAnalytics: FirebaseAnalytics
 
@@ -43,11 +44,28 @@ object FirebaseModule {
             )
             fetchAndActivate().addOnCompleteListener { task ->
                 if (task.isSuccessful) {
-                    CoreModule.storeApiKey("Adjust", getString("adjust_api_key"))
-                    CoreModule.storeApiKey("OneSignal", getString("onesignal_api_key"))
-                    CoreModule.storeApiKey("RevenueCat", getString("revenuecat_api_key"))
-                    CoreModule.setTermsLinkUrl(getString("terms_link_url"))
-                    CoreModule.setPrivacyPolicyUrl(getString("privacy_policy_link_url"))
+                    // Fetch and log each key value from Remote Config
+                    val adjustApiKey = getString("adjust_api_key")
+                    val oneSignalApiKey = getString("onesignal_api_key")
+                    val revenueCatApiKey = getString("revenuecat_api_key")
+                    val termsLinkUrl = getString("terms_link_url")
+                    val privacyPolicyUrl = getString("privacy_policy_link_url")
+
+                    // Store each key in CoreModule
+                    CoreModule.storeApiKey("Adjust", adjustApiKey)
+                    CoreModule.storeApiKey("OneSignal", oneSignalApiKey)
+                    CoreModule.storeApiKey("RevenueCat", revenueCatApiKey)
+                    CoreModule.setTermsLinkUrl(termsLinkUrl)
+                    CoreModule.setPrivacyPolicyUrl(privacyPolicyUrl)
+
+                    // Log each key value
+                    Log.d(LOG_TAG, "Remote Config - Adjust API Key: $adjustApiKey")
+                    Log.d(LOG_TAG, "Remote Config - OneSignal API Key: $oneSignalApiKey")
+                    Log.d(LOG_TAG, "Remote Config - RevenueCat API Key: $revenueCatApiKey")
+                    Log.d(LOG_TAG, "Remote Config - Terms Link URL: $termsLinkUrl")
+                    Log.d(LOG_TAG, "Remote Config - Privacy Policy URL: $privacyPolicyUrl")
+                } else {
+                    Log.e(LOG_TAG, "Remote Config fetch failed.")
                 }
                 onConfigFetched() // Notify that Remote Config is fetched
             }

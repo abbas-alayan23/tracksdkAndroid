@@ -1,3 +1,4 @@
+// TrackingSdk.kt
 package com.app.trackingsdk
 
 import android.content.Context
@@ -9,8 +10,12 @@ import com.app.trackingsdk.modules.OneSignalModule
 import com.app.trackingsdk.modules.RevenueCatModule
 import com.google.firebase.FirebaseOptions
 
-// TrackingSdk.kt
 class TrackingSdk {
+
+    companion object {
+        private const val LOG_TAG = "TrackingSdk"
+    }
+
     fun initialize(
         context: Context,
         userId: String,
@@ -26,6 +31,8 @@ class TrackingSdk {
         CoreModule.setUserId(userId)
         CoreModule.setPackageName(packageName)
 
+        Log.d(LOG_TAG, "Starting SDK Initialization...")
+
         val firebaseOptions = FirebaseOptions.Builder()
             .setApiKey(firebaseApiKey)
             .setApplicationId(firebaseAppId)
@@ -35,11 +42,18 @@ class TrackingSdk {
             .setGcmSenderId(firebaseMessagingSenderId)
             .build()
 
-        FirebaseModule.initialize(context, firebaseOptions) {
-            // Initialize other SDKs after Firebase and Remote Config are ready
+        initializeFirebase(context, firebaseOptions) {
+            Log.d(LOG_TAG, "Firebase initialized successfully.")
+
             initializeAdjust(context) {
+                Log.d(LOG_TAG, "Adjust initialized successfully.")
+
                 initializeOneSignal(context) {
+                    Log.d(LOG_TAG, "OneSignal initialized successfully.")
+
                     initializeRevenueCat(context) {
+                        Log.d(LOG_TAG, "RevenueCat initialized successfully.")
+
                         logInitializationStatuses()
                         onInitializationComplete()
                     }
@@ -50,33 +64,35 @@ class TrackingSdk {
 
     private fun initializeFirebase(context: Context, options: FirebaseOptions, onNext: () -> Unit) {
         FirebaseModule.initialize(context, options) {
-            // Mark Firebase as initialized in CoreModule after Remote Config is fetched
             CoreModule.setSdkInitialized("Firebase", true)
-            onNext() // Proceed to the next SDK after Firebase setup and Remote Config fetch
+            Log.d(LOG_TAG, "Firebase setup and Remote Config fetched.")
+            onNext()
         }
     }
-
 
     private fun initializeAdjust(context: Context, onNext: () -> Unit) {
         AdjustModule.initialize(context)
         CoreModule.setSdkInitialized("Adjust", true)
-        onNext() // Proceed to the next SDK after Adjust setup
+        Log.d(LOG_TAG, "Adjust setup complete.")
+        onNext()
     }
 
     private fun initializeOneSignal(context: Context, onNext: () -> Unit) {
         OneSignalModule.initialize(context)
         CoreModule.setSdkInitialized("OneSignal", true)
-        onNext() // Proceed to the next SDK after OneSignal setup
+        Log.d(LOG_TAG, "OneSignal setup complete.")
+        onNext()
     }
 
     private fun initializeRevenueCat(context: Context, onNext: () -> Unit) {
         val revenueCatApiKey = CoreModule.getApiKey("RevenueCat")
         if (revenueCatApiKey.isNullOrEmpty()) {
-            Log.e("TrackingSdk", "RevenueCat API key not available. Delaying initialization.")
+            Log.e(LOG_TAG, "RevenueCat API key not available. Delaying initialization.")
             return
         }
         RevenueCatModule.initialize(context, revenueCatApiKey)
         CoreModule.setSdkInitialized("RevenueCat", true)
+        Log.d(LOG_TAG, "RevenueCat setup complete.")
         onNext()
     }
 
@@ -84,7 +100,7 @@ class TrackingSdk {
         val sdkNames = listOf("Firebase", "Adjust", "OneSignal", "RevenueCat")
         sdkNames.forEach { sdk ->
             val isInitialized = CoreModule.isSdkInitialized(sdk)
-            Log.d("TrackingSdk", "$sdk initialized: $isInitialized")
+            Log.d(LOG_TAG, "$sdk initialized: $isInitialized")
         }
     }
 
