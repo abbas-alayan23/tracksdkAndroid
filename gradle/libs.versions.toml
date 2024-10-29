@@ -2,6 +2,7 @@
 adjustAndroid = "5.0.1"
 agp = "8.5.2"
 firebaseBom = "33.5.1"
+firebaseBomVersion = "32.1.0"
 installreferrer = "2.2"
 kotlin = "1.9.0"
 coreKtx = "1.13.1"
@@ -10,12 +11,11 @@ junitVersion = "1.2.1"
 espressoCore = "3.6.1"
 lifecycleRuntimeKtx = "2.8.6"
 activityCompose = "1.9.3"
-composeBom = "2024.04.01"
+composeBom = "2024.10.00"
 appcompat = "1.7.0"
 material = "1.12.0"
 firebaseConfigKtx = "22.0.1"
 playServicesAdsIdentifier = "18.1.0"
-playServicesMeasurementApi = "22.1.2"
 
 [libraries]
 adjust-android = { module = "com.adjust.sdk:adjust-android", version.ref = "adjustAndroid" }
@@ -24,6 +24,7 @@ androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = 
 firebase-analytics = { module = "com.google.firebase:firebase-analytics" }
 firebase-analytics-ktx = { module = "com.google.firebase:firebase-analytics-ktx" }
 firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebaseBom" }
+firebase-bom-v3210 = { module = "com.google.firebase:firebase-bom", version.ref = "firebaseBomVersion" }
 firebase-config = { module = "com.google.firebase:firebase-config" }
 installreferrer = { module = "com.android.installreferrer:installreferrer", version.ref = "installreferrer" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
@@ -43,7 +44,6 @@ androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version
 material = { group = "com.google.android.material", name = "material", version.ref = "material" }
 firebase-config-ktx = { group = "com.google.firebase", name = "firebase-config-ktx", version.ref = "firebaseConfigKtx" }
 play-services-ads-identifier = { module = "com.google.android.gms:play-services-ads-identifier", version.ref = "playServicesAdsIdentifier" }
-play-services-measurement-api = { group = "com.google.android.gms", name = "play-services-measurement-api", version.ref = "playServicesMeasurementApi" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

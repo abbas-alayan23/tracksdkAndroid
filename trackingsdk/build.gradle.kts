@@ -40,15 +40,13 @@ dependencies {
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
 
-    implementation(libs.firebase.bom)
+    implementation(platform(libs.firebase.bom.v3210))
 
-    // Add required Firebase libraries
     implementation(libs.firebase.config.ktx)
-    implementation(libs.firebase.analytics.ktx)
+    implementation("com.google.firebase:firebase-analytics-ktx")
 
     implementation (libs.adjust.android)
     implementation (libs.installreferrer)
-    // Add the following if you are using the Adjust SDK inside web views on your app
     implementation (libs.adjust.android.webbridge)
 
     implementation (libs.installreferrer)
@@ -59,7 +57,10 @@ dependencies {
     implementation ("com.revenuecat.purchases:purchases:8.8.1")
     implementation ("com.revenuecat.purchases:purchases-ui:8.8.1")
     implementation ("com.android.billingclient:billing:5.0.0")
-    implementation(libs.play.services.measurement.api)
+//    implementation(libs.play.services.measurement.api) {
+//        exclude(group = "com.google.android.gms", module = "play-services-measurement")
+//    }
+
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
@@ -72,7 +73,7 @@ afterEvaluate {
                 from(components["release"])
                 groupId = "com.github.abbas-alayan23"
                 artifactId = "tracking-sdk"
-                version = "1.1"
+                version = "1.2"
             }
         }
     }
