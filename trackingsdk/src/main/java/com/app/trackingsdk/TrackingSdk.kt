@@ -36,10 +36,10 @@ class TrackingSdk {
             Log.d("MySDK", "$sdk initialized: $isInitialized")
         }
     }
-    private fun getPrivacyPolicyLink(): String {
+     fun getPrivacyPolicyLink(): String {
         return CoreModule.getPrivacyPolicyUrl() ?: ""
     }
-    private fun getTermsLink(): String {
+     fun getTermsLink(): String {
         return CoreModule.getTermsLinkUrl() ?: ""
     }
 }
