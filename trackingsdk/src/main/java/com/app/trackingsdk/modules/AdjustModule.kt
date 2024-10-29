@@ -38,7 +38,7 @@ object AdjustModule {
     private suspend fun adjustFirebaseIdEvent(adjustEventToken: String, userId: String) {
         val instanceId = withContext(Dispatchers.IO) {
             FirebaseMessaging.getInstance().token
-        } ?: "Unknown installation id"
+        }
 
         val adjustEvent = AdjustEvent(adjustEventToken)
         adjustEvent.addCallbackParameter("eventValue", instanceId.toString())
