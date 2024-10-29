@@ -8,20 +8,16 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
-class OneSignalInitializer {
+object OneSignalInitializer {
+    private var isInitialized = false
 
     fun initialize(context: Context, oneSignalKey: String) {
-        OneSignal.Debug.logLevel = LogLevel.DEBUG
-        if (oneSignalKey.isBlank()) {
-            Log.e("OneSignalInitializer", "OneSignal key is blank or missing")
-            return
-        }
+        if (isInitialized || oneSignalKey.isBlank()) return
+
         OneSignal.initWithContext(context, oneSignalKey)
-
-
         CoroutineScope(Dispatchers.IO).launch {
             OneSignal.Notifications.requestPermission(false)
         }
+        isInitialized = true
     }
-
 }

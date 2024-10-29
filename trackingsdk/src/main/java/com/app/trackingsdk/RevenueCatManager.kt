@@ -14,52 +14,40 @@ import com.revenuecat.purchases.ui.revenuecatui.activity.PaywallResult
 import com.revenuecat.purchases.ui.revenuecatui.activity.PaywallResultHandler
 import java.util.Date
 
-class RevenueCatManager :PaywallResultHandler {
+object RevenueCatManager : PaywallResultHandler {
+    private var isInitialized = false
     private var paywallActivityLauncher: PaywallActivityLauncher? = null
     private var paywallResultCallback: ((String, CustomerInfo?) -> Unit)? = null
 
-
     fun initialize(context: Context, revenueCatKey: String, userId: String) {
-        if (revenueCatKey.isBlank() || userId.isBlank()) {
-            Log.e("RevenueCatManager", "RevenueCat key or user ID is blank or missing")
-            return
-        }
+        if (isInitialized || revenueCatKey.isBlank() || userId.isBlank()) return
 
-        val purchasesConfiguration = PurchasesConfiguration.Builder(context, revenueCatKey)
+        val config = PurchasesConfiguration.Builder(context, revenueCatKey)
             .appUserID(userId)
             .build()
-
-        Purchases.configure(purchasesConfiguration)
+        Purchases.configure(config)
 
         Purchases.sharedInstance.setAttributes(
             mapOf("package_name" to (context.packageName.takeIf { it.isNotBlank() } ?: "unknown"))
         )
+
+        isInitialized = true
     }
 
     fun isUserSubscribed(context: Context, entitlementId: String, onResult: (Boolean) -> Unit) {
         Purchases.sharedInstance.getCustomerInfo(object : ReceiveCustomerInfoCallback {
             override fun onReceived(customerInfo: CustomerInfo) {
-                val entitlementInfo = customerInfo.entitlements[entitlementId]
-
-                val isSubscribed = entitlementInfo?.isActive == true
-
+                val isSubscribed = customerInfo.entitlements[entitlementId]?.isActive == true
                 onResult(isSubscribed)
-
-                // Log the subscription status
-                if (isSubscribed) {
-                    Log.d("Purchase Status", "User is subscribed (Active)")
-                } else {
-                    Log.d("Purchase Status", "User is not subscribed (Inactive)")
-                }
             }
 
             override fun onError(error: PurchasesError) {
-                // Handle the error case and return false
                 Log.e("RevenueCatManager", "Error fetching customer info: ${error.message}")
                 onResult(false)
             }
         })
     }
+
 
     fun presentPayWall(
         caller: ActivityResultCaller,

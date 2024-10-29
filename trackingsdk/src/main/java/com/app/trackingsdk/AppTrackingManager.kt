@@ -12,59 +12,73 @@ import com.google.firebase.remoteconfig.FirebaseRemoteConfigSettings
 import com.revenuecat.purchases.CustomerInfo
 
 
-class AppTrackingManager {
+object AppTrackingManager {
+    private lateinit var userId: String
+    private var isDebug: Boolean = false
     private lateinit var remoteConfig: FirebaseRemoteConfig
     private var firebaseAnalytics: FirebaseAnalytics? = null
 
+    // Use lazy initialization for each manager
+    private val adjustManager by lazy { AdjustManager }
+    private val oneSignalInitializer by lazy { OneSignalInitializer }
+    private val revenueCatManager by lazy { RevenueCatManager }
 
+    private var isInitialized = false
+
+    // Initialization function to set up the necessary SDKs once
     fun init(context: Context, isDebug: Boolean, userId: String) {
+        if (isInitialized) return // Avoid re-initializing
+
+        this.userId = userId
+        this.isDebug = isDebug
+
+        // Firebase setup
         if (FirebaseApp.getApps(context).isEmpty()) {
             FirebaseApp.initializeApp(context)
         }
-        firebaseAnalytics = FirebaseAnalytics.getInstance(context)
+        firebaseAnalytics = FirebaseAnalytics.getInstance(context).apply {
+            setUserId(userId)
+        }
 
-        // Optional: Set user properties or analytics configurations here
-        firebaseAnalytics?.setUserId(userId)
+        remoteConfig = FirebaseRemoteConfig.getInstance().apply {
+            setConfigSettingsAsync(
+                FirebaseRemoteConfigSettings.Builder()
+                    .setMinimumFetchIntervalInSeconds(if (isDebug) 0 else 3600)
+                    .build()
+            )
+        }
 
-        remoteConfig = FirebaseRemoteConfig.getInstance()
-        val configSettings = FirebaseRemoteConfigSettings.Builder()
-            .setMinimumFetchIntervalInSeconds(3600)
-            .build()
-        remoteConfig.setConfigSettingsAsync(configSettings)
+        // Fetch and activate remote config, then initialize other SDKs
+        fetchRemoteConfigValues(context)
 
-        fetchRemoteConfigValues(isDebug, userId, context)
+        isInitialized = true
     }
 
-    private fun fetchRemoteConfigValues(isDebug: Boolean, userId: String, context: Context) {
-        remoteConfig.fetchAndActivate()
-            .addOnCompleteListener { task ->
-                if (task.isSuccessful) {
-                    val adjustKey = remoteConfig.getString("adjust_sdk_key").takeIf { it.isNotBlank() }
-                    val oneSignalKey = remoteConfig.getString("onesignal_sdk_key").takeIf { it.isNotBlank() }
-                    val revenueCatKey = remoteConfig.getString("revenuecat_sdk_key").takeIf { it.isNotBlank() }
+    private fun fetchRemoteConfigValues(context: Context) {
+        remoteConfig.fetchAndActivate().addOnCompleteListener { task ->
+            if (task.isSuccessful) {
+                val adjustKey = remoteConfig.getString("adjust_sdk_key").takeIf { it.isNotBlank() }
+                val oneSignalKey = remoteConfig.getString("onesignal_sdk_key").takeIf { it.isNotBlank() }
+                val revenueCatKey = remoteConfig.getString("revenuecat_sdk_key").takeIf { it.isNotBlank() }
 
-                    if (adjustKey != null && oneSignalKey != null && revenueCatKey != null) {
-                        initializeOtherSDKs(adjustKey, oneSignalKey, revenueCatKey, isDebug, context, userId)
-                    } else {
-                        // Handle missing or empty configuration keys here
-                        Log.e("TrackingSdkManager", "SDK keys are missing from remote config")
-                    }
+                if (adjustKey != null && oneSignalKey != null && revenueCatKey != null) {
+                    initializeSDKs(context, adjustKey, oneSignalKey, revenueCatKey)
+                } else {
+                    Log.e("AppTrackingManager", "SDK keys are missing from remote config")
                 }
             }
+        }
     }
 
-    fun trackSubscriptionEvent(
-        adjustSubscriptionEventToken: String,
-        iapObject: IapObject?,
-        context: Context
-    ) {
-        val adjustEvent = AdjustManager().getParamsToAdjust(adjustSubscriptionEventToken, iapObject, context)
-        Adjust.trackEvent(adjustEvent)
+    private fun initializeSDKs(context: Context, adjustKey: String, oneSignalKey: String, revenueCatKey: String) {
+        adjustManager.initialize(context, adjustKey, isDebug, userId)
+        oneSignalInitializer.initialize(context, oneSignalKey)
+        revenueCatManager.initialize(context, revenueCatKey, userId)
     }
 
-
-    fun checkIsSubscribed(context: Context, entiltmentId :String, onResult: (Boolean) -> Unit) {
-        RevenueCatManager().isUserSubscribed(context, entitlementId = entiltmentId) { isSubscribed ->
+    // Example of a function using initialized SDKs
+    fun checkIsSubscribed(context: Context, entitlementId: String, onResult: (Boolean) -> Unit) {
+        revenueCatManager.isUserSubscribed(context, entitlementId) { isSubscribed ->
             onResult(isSubscribed)
         }
     }
@@ -77,7 +91,7 @@ class AppTrackingManager {
         onResult: (String, IapObject?) -> Unit
     ) {
         // Present RevenueCat paywall
-        RevenueCatManager().presentPayWall(caller) { result, customerInfo ->
+        RevenueCatManager.presentPayWall(caller) { result, customerInfo ->
             when (result) {
                 "successfully purchased" -> {
                     // Initialize BillingManager to capture orderId and purchaseToken
@@ -100,6 +114,20 @@ class AppTrackingManager {
         }
     }
 
+    fun trackSubscriptionEvent(
+        adjustSubscriptionEventToken: String,
+        iapObject: IapObject?,
+        context: Context
+    ) {
+        iapObject?.let {
+            val adjustEvent = AdjustManager.getParamsToAdjust(adjustSubscriptionEventToken, it, context)
+            Adjust.trackEvent(adjustEvent)
+        } ?: Log.w("AppTrackingManager", "IapObject is null, cannot track subscription event")
+    }
+
+
+
+
 
 
     private fun initializeOtherSDKs(
@@ -110,9 +138,9 @@ class AppTrackingManager {
         context: Context,
         userId: String
     ) {
-        AdjustManager().initialize(context, adjustKey, isDebug, userId)
-        OneSignalInitializer().initialize(context, oneSignalKey)
-        RevenueCatManager().initialize(context, revenueCatKey, userId)
+        AdjustManager.initialize(context, adjustKey, isDebug, userId)
+        OneSignalInitializer.initialize(context, oneSignalKey)
+        RevenueCatManager.initialize(context, revenueCatKey, userId)
     }
 
     fun createIapObjectFromCustomerInfo(

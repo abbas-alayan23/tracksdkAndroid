@@ -11,22 +11,23 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-class AdjustManager {
+object AdjustManager {
+    private var isInitialized = false
 
     fun initialize(context: Context, adjustKey: String, isDebug: Boolean, userId: String) {
+        if (isInitialized) return
+
         val config = AdjustConfig(
             context,
             adjustKey,
             if (isDebug) AdjustConfig.ENVIRONMENT_SANDBOX else AdjustConfig.ENVIRONMENT_PRODUCTION
-        )
-        Adjust.addGlobalCallbackParameter("user_uuid", userId)
+        ).apply {
+            Adjust.addGlobalCallbackParameter("user_uuid", userId)
+        }
         Adjust.initSdk(config)
 
-        CoroutineScope(Dispatchers.IO).launch {
-            adjustFirebaseIdEvent("yourAdjustEventToken", userId)
-        }
+        isInitialized = true
     }
-
     fun getParamsToAdjust(
         adjustSubscriptionEventToken: String,
         iapObject: IapObject?,
