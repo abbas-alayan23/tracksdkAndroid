@@ -41,7 +41,7 @@ class TrackingSdk {
                 initializeOneSignal(context) {
                     initializeRevenueCat(context) {
                         logInitializationStatuses()
-                        onInitializationComplete() // Callback after all SDKs initialized
+                        onInitializationComplete()
                     }
                 }
             }
@@ -70,9 +70,14 @@ class TrackingSdk {
     }
 
     private fun initializeRevenueCat(context: Context, onNext: () -> Unit) {
-        RevenueCatModule.initialize(context)
+        val revenueCatApiKey = CoreModule.getApiKey("RevenueCat")
+        if (revenueCatApiKey.isNullOrEmpty()) {
+            Log.e("TrackingSdk", "RevenueCat API key not available. Delaying initialization.")
+            return
+        }
+        RevenueCatModule.initialize(context, revenueCatApiKey)
         CoreModule.setSdkInitialized("RevenueCat", true)
-        onNext() // All SDKs are now initialized
+        onNext()
     }
 
     private fun logInitializationStatuses() {

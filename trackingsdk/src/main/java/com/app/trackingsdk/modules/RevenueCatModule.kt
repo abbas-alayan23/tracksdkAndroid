@@ -10,8 +10,7 @@ object RevenueCatModule {
     private var isInitialized = false
 
 
-    fun initialize(context: Context) {
-        val revenueCatApiKey = CoreModule.getApiKey("RevenueCat") ?: return
+    fun initialize(context: Context, revenueCatApiKey: String) {
         Purchases.configure(PurchasesConfiguration.Builder(context, revenueCatApiKey).build())
         CoreModule.getPackageName()?.let { packageName ->
             Purchases.sharedInstance.setAttributes(
