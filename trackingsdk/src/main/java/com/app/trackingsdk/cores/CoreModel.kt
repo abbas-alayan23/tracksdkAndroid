@@ -6,6 +6,8 @@ object CoreModule {
     private var userId: String? = null
     private var packageName : String? = null
     private val sdkInitStatus = mutableMapOf<String, Boolean>()
+    private var termsLinkUrl :String? = null
+    private var privacyPolicyUrl :String? = null
 
     fun setSdkInitialized(sdkName: String, isInitialized: Boolean) {
         sdkInitStatus[sdkName] = isInitialized
@@ -29,4 +31,14 @@ object CoreModule {
     fun getPackageName(): String? = packageName
 
     fun getUserId(): String? = userId
+
+
+    fun setTermsLinkUrl(url: String) {
+        termsLinkUrl = url
+    }
+    fun getTermsLinkUrl(): String? = termsLinkUrl
+    fun setPrivacyPolicyUrl(url: String) {
+        privacyPolicyUrl = url
+    }
+    fun getPrivacyPolicyUrl(): String? = privacyPolicyUrl
 }

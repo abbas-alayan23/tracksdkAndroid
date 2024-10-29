@@ -41,6 +41,8 @@ object FirebaseModule {
                         CoreModule.storeApiKey("Adjust", getString("adjust_api_key"))
                         CoreModule.storeApiKey("OneSignal", getString("onesignal_api_key"))
                         CoreModule.storeApiKey("RevenueCat", getString("revenuecat_api_key"))
+                        CoreModule.setTermsLinkUrl(getString("terms_link_url"))
+                        CoreModule.setPrivacyPolicyUrl(getString("privacy_policy_link_url"))
                     }
                 }
 
