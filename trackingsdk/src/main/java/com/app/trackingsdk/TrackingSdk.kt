@@ -21,13 +21,11 @@ class TrackingSdk {
         firebaseDatabaseUrl: String,
         firebaseStorageBucket: String,
         firebaseMessagingSenderId: String,
-        onInitializationComplete: () -> Unit // Callback for when all SDKs are initialized
+        onInitializationComplete: () -> Unit
     ) {
-        // Store the user ID in CoreModule
         CoreModule.setUserId(userId)
         CoreModule.setPackageName(packageName)
 
-        // Create FirebaseOptions with provided parameters
         val firebaseOptions = FirebaseOptions.Builder()
             .setApiKey(firebaseApiKey)
             .setApplicationId(firebaseAppId)
@@ -37,14 +35,13 @@ class TrackingSdk {
             .setGcmSenderId(firebaseMessagingSenderId)
             .build()
 
-        // Initialize SDKs sequentially
-        initializeFirebase(context, firebaseOptions) {
+        FirebaseModule.initialize(context, firebaseOptions) {
+            // Initialize other SDKs after Firebase and Remote Config are ready
             initializeAdjust(context) {
                 initializeOneSignal(context) {
                     initializeRevenueCat(context) {
-                        // All SDKs initialized, log statuses and execute the final callback
                         logInitializationStatuses()
-                        onInitializationComplete()
+                        onInitializationComplete() // Callback after all SDKs initialized
                     }
                 }
             }
@@ -52,10 +49,13 @@ class TrackingSdk {
     }
 
     private fun initializeFirebase(context: Context, options: FirebaseOptions, onNext: () -> Unit) {
-        FirebaseModule.initialize(context, options)
-        CoreModule.setSdkInitialized("Firebase", true)
-        onNext() // Proceed to the next SDK after Firebase setup
+        FirebaseModule.initialize(context, options) {
+            // Mark Firebase as initialized in CoreModule after Remote Config is fetched
+            CoreModule.setSdkInitialized("Firebase", true)
+            onNext() // Proceed to the next SDK after Firebase setup and Remote Config fetch
+        }
     }
+
 
     private fun initializeAdjust(context: Context, onNext: () -> Unit) {
         AdjustModule.initialize(context)

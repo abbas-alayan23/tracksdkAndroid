@@ -20,46 +20,37 @@ object FirebaseModule {
 
     private lateinit var firebaseAnalytics: FirebaseAnalytics
 
-    fun initialize(
-        context: Context,
-        firebaseOptions: FirebaseOptions
-    ) {
+    fun initialize(context: Context, firebaseOptions: FirebaseOptions, onConfigFetched: () -> Unit) {
         if (FirebaseApp.getApps(context).isEmpty()) {
             FirebaseApp.initializeApp(context, firebaseOptions)
-        } else {
-            FirebaseApp.initializeApp(context)
         }
 
         firebaseAnalytics = FirebaseAnalytics.getInstance(context)
 
-        // Immediately set up and fetch Remote Config
-        setupRemoteConfig()
+        // Setup and fetch Remote Config
+        setupRemoteConfig(onConfigFetched)
 
         isInitialized = true
         CoreModule.setSdkInitialized("Firebase", isInitialized)
     }
 
-    private fun setupRemoteConfig() {
+    private fun setupRemoteConfig(onConfigFetched: () -> Unit) {
         val firebaseRemoteConfig = FirebaseRemoteConfig.getInstance().apply {
             setConfigSettingsAsync(
                 FirebaseRemoteConfigSettings.Builder()
-                    .setMinimumFetchIntervalInSeconds(3600) // or other interval
+                    .setMinimumFetchIntervalInSeconds(3600)
                     .build()
             )
-            fetchAndActivate()
-                .addOnCompleteListener { task ->
-                    if (task.isSuccessful) {
-                        // Fetch API keys from remote config
-                        CoreModule.storeApiKey("Adjust", getString("adjust_api_key"))
-                        CoreModule.storeApiKey("OneSignal", getString("onesignal_api_key"))
-                        CoreModule.storeApiKey("RevenueCat", getString("revenuecat_api_key"))
-                        CoreModule.setTermsLinkUrl(getString("terms_link_url"))
-                        CoreModule.setPrivacyPolicyUrl(getString("privacy_policy_link_url"))
-                    } else {
-                        // Log or handle the failure if fetch failed
-                        Log.e("FirebaseModule", "Remote Config fetch failed")
-                    }
+            fetchAndActivate().addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    CoreModule.storeApiKey("Adjust", getString("adjust_api_key"))
+                    CoreModule.storeApiKey("OneSignal", getString("onesignal_api_key"))
+                    CoreModule.storeApiKey("RevenueCat", getString("revenuecat_api_key"))
+                    CoreModule.setTermsLinkUrl(getString("terms_link_url"))
+                    CoreModule.setPrivacyPolicyUrl(getString("privacy_policy_link_url"))
                 }
+                onConfigFetched() // Notify that Remote Config is fetched
+            }
         }
     }
 
