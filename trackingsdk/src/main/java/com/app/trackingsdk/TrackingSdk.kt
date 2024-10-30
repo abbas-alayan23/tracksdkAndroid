@@ -1,4 +1,3 @@
-// TrackingSdk.kt
 package com.app.trackingsdk
 
 import android.content.Context
@@ -15,9 +14,6 @@ class TrackingSdk {
     companion object {
         private const val LOG_TAG = "TrackingSdk"
     }
-
-
-
 
     fun initialize(
         context: Context,
@@ -41,35 +37,39 @@ class TrackingSdk {
             .build()
 
         FirebaseModule.initialize(context, firebaseOptions) { configMap ->
-            val adjustApiKey = configMap["adjust_api_key"]
-            val oneSignalApiKey = configMap["onesignal_api_key"]
-            val revenueCatApiKey = configMap["revenuecat_api_key"]
-
-            // Initialize other SDKs that rely on these keys, only if keys are not null
-            if (adjustApiKey != null) {
-                AdjustModule.initialize(context)
+            if (configMap.isNotEmpty()) {
+                initializeSDKs(context, configMap)
+                logInitializationStatuses()
+                onComplete()
             } else {
-                Log.e("TrackingSdk", "Adjust API key is missing.")
+                Log.e(LOG_TAG, "Config map is empty. Unable to initialize all SDKs.")
             }
-
-            if (oneSignalApiKey != null) {
-                OneSignalModule.initialize(context)
-            } else {
-                Log.e("TrackingSdk", "OneSignal API key is missing.")
-            }
-
-            if (revenueCatApiKey != null) {
-                RevenueCatModule.initialize(context, revenueCatApiKey)
-            } else {
-                Log.e("TrackingSdk", "RevenueCat API key is missing. Skipping RevenueCat initialization.")
-            }
-
-            // Log initialization statuses and invoke the onComplete callback
-            logInitializationStatuses()
-            onComplete()
         }
     }
 
+    private fun initializeSDKs(context: Context, configMap: Map<String, String>) {
+        val adjustApiKey = configMap["adjust_api_key"]
+        val oneSignalApiKey = configMap["onesignal_api_key"]
+        val revenueCatApiKey = configMap["revenuecat_api_key"]
+
+        if (!adjustApiKey.isNullOrEmpty()) {
+            AdjustModule.initialize(context)
+        } else {
+            Log.e(LOG_TAG, "Adjust API key is missing.")
+        }
+
+        if (!oneSignalApiKey.isNullOrEmpty()) {
+            OneSignalModule.initialize(context)
+        } else {
+            Log.e(LOG_TAG, "OneSignal API key is missing.")
+        }
+
+        if (!revenueCatApiKey.isNullOrEmpty()) {
+            RevenueCatModule.initialize(context, revenueCatApiKey)
+        } else {
+            Log.e(LOG_TAG, "RevenueCat API key is missing. Skipping RevenueCat initialization.")
+        }
+    }
 
     private fun logInitializationStatuses() {
         val sdkNames = listOf("Firebase", "Adjust", "OneSignal", "RevenueCat")
