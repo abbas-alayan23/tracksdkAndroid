@@ -19,14 +19,18 @@ class TrackingSdk {
 
 
 
-        fun initialize(context: Context,  userId: String,
-            packageName: String,
-            firebaseApiKey: String,
-            firebaseAppId: String,
-            firebaseProjectId: String,
-            firebaseDatabaseUrl: String,
-            firebaseStorageBucket: String,
-            firebaseMessagingSenderId: String) {
+    fun initialize(
+        context: Context,
+        userId: String,
+        packageName: String,
+        firebaseApiKey: String,
+        firebaseAppId: String,
+        firebaseProjectId: String,
+        firebaseDatabaseUrl: String,
+        firebaseStorageBucket: String,
+        firebaseMessagingSenderId: String,
+        onComplete: () -> Unit // Callback for successful SDK initialization
+    ) {
         val firebaseOptions = FirebaseOptions.Builder()
             .setApiKey(firebaseApiKey)
             .setApplicationId(firebaseAppId)
@@ -35,12 +39,13 @@ class TrackingSdk {
             .setStorageBucket(firebaseStorageBucket)
             .setGcmSenderId(firebaseMessagingSenderId)
             .build()
-        FirebaseModule.initialize(context,firebaseOptions ) { configMap ->
+
+        FirebaseModule.initialize(context, firebaseOptions) { configMap ->
             val adjustApiKey = configMap["adjust_api_key"]
             val oneSignalApiKey = configMap["onesignal_api_key"]
             val revenueCatApiKey = configMap["revenuecat_api_key"]
 
-            // Now, initialize other SDKs that rely on these keys
+            // Initialize other SDKs that rely on these keys
             if (adjustApiKey != null) {
                 AdjustModule.initialize(context)
             }
@@ -50,7 +55,10 @@ class TrackingSdk {
             if (revenueCatApiKey != null) {
                 RevenueCatModule.initialize(context, revenueCatApiKey)
             }
+
+            // Log initialization statuses and invoke the onComplete callback
             logInitializationStatuses()
+            onComplete()
         }
     }
 
