@@ -16,23 +16,17 @@ class TrackingSdk {
         private const val LOG_TAG = "TrackingSdk"
     }
 
-    fun initialize(
-        context: Context,
-        userId: String,
-        packageName: String,
-        firebaseApiKey: String,
-        firebaseAppId: String,
-        firebaseProjectId: String,
-        firebaseDatabaseUrl: String,
-        firebaseStorageBucket: String,
-        firebaseMessagingSenderId: String,
-        onInitializationComplete: () -> Unit
-    ) {
-        CoreModule.setUserId(userId)
-        CoreModule.setPackageName(packageName)
 
-        Log.d(LOG_TAG, "Starting SDK Initialization...")
 
+
+        fun initialize(context: Context,  userId: String,
+            packageName: String,
+            firebaseApiKey: String,
+            firebaseAppId: String,
+            firebaseProjectId: String,
+            firebaseDatabaseUrl: String,
+            firebaseStorageBucket: String,
+            firebaseMessagingSenderId: String) {
         val firebaseOptions = FirebaseOptions.Builder()
             .setApiKey(firebaseApiKey)
             .setApplicationId(firebaseAppId)
@@ -41,60 +35,25 @@ class TrackingSdk {
             .setStorageBucket(firebaseStorageBucket)
             .setGcmSenderId(firebaseMessagingSenderId)
             .build()
+        FirebaseModule.initialize(context,firebaseOptions ) { configMap ->
+            val adjustApiKey = configMap["adjust_api_key"]
+            val oneSignalApiKey = configMap["onesignal_api_key"]
+            val revenueCatApiKey = configMap["revenuecat_api_key"]
 
-        initializeFirebase(context, firebaseOptions) {
-            Log.d(LOG_TAG, "Firebase initialized successfully.")
-
-            initializeAdjust(context) {
-                Log.d(LOG_TAG, "Adjust initialized successfully.")
-
-                initializeOneSignal(context) {
-                    Log.d(LOG_TAG, "OneSignal initialized successfully.")
-
-                    initializeRevenueCat(context) {
-                        Log.d(LOG_TAG, "RevenueCat initialized successfully.")
-
-                        logInitializationStatuses()
-                        onInitializationComplete()
-                    }
-                }
+            // Now, initialize other SDKs that rely on these keys
+            if (adjustApiKey != null) {
+                AdjustModule.initialize(context)
             }
+            if (oneSignalApiKey != null) {
+                OneSignalModule.initialize(context)
+            }
+            if (revenueCatApiKey != null) {
+                RevenueCatModule.initialize(context, revenueCatApiKey)
+            }
+            logInitializationStatuses()
         }
     }
 
-    private fun initializeFirebase(context: Context, options: FirebaseOptions, onNext: () -> Unit) {
-        FirebaseModule.initialize(context, options) {
-            CoreModule.setSdkInitialized("Firebase", true)
-            Log.d(LOG_TAG, "Firebase setup and Remote Config fetched.")
-            onNext()
-        }
-    }
-
-    private fun initializeAdjust(context: Context, onNext: () -> Unit) {
-        AdjustModule.initialize(context)
-        CoreModule.setSdkInitialized("Adjust", true)
-        Log.d(LOG_TAG, "Adjust setup complete.")
-        onNext()
-    }
-
-    private fun initializeOneSignal(context: Context, onNext: () -> Unit) {
-        OneSignalModule.initialize(context)
-        CoreModule.setSdkInitialized("OneSignal", true)
-        Log.d(LOG_TAG, "OneSignal setup complete.")
-        onNext()
-    }
-
-    private fun initializeRevenueCat(context: Context, onNext: () -> Unit) {
-        val revenueCatApiKey = CoreModule.getApiKey("RevenueCat")
-        if (revenueCatApiKey.isNullOrEmpty()) {
-            Log.e(LOG_TAG, "RevenueCat API key not available. Delaying initialization.")
-            return
-        }
-        RevenueCatModule.initialize(context, revenueCatApiKey)
-        CoreModule.setSdkInitialized("RevenueCat", true)
-        Log.d(LOG_TAG, "RevenueCat setup complete.")
-        onNext()
-    }
 
     private fun logInitializationStatuses() {
         val sdkNames = listOf("Firebase", "Adjust", "OneSignal", "RevenueCat")
