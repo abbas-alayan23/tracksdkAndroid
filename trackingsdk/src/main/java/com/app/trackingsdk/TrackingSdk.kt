@@ -25,7 +25,7 @@ class TrackingSdk {
         firebaseDatabaseUrl: String,
         firebaseStorageBucket: String,
         firebaseMessagingSenderId: String,
-        onComplete: () -> Unit // Callback for successful SDK initialization
+        onComplete: () -> Unit
     ) {
         val firebaseOptions = FirebaseOptions.Builder()
             .setApiKey(firebaseApiKey)
@@ -38,12 +38,13 @@ class TrackingSdk {
 
         FirebaseModule.initialize(context, firebaseOptions) { configMap ->
             if (configMap.isNotEmpty()) {
+                Log.d(LOG_TAG, "Config map fetched successfully.")
                 initializeSDKs(context, configMap)
-                logInitializationStatuses()
-                onComplete()
             } else {
                 Log.e(LOG_TAG, "Config map is empty. Unable to initialize all SDKs.")
             }
+            logInitializationStatuses()
+            onComplete()
         }
     }
 
@@ -53,21 +54,24 @@ class TrackingSdk {
         val revenueCatApiKey = configMap["revenuecat_api_key"]
 
         if (!adjustApiKey.isNullOrEmpty()) {
+            Log.d(LOG_TAG, "Initializing Adjust with API Key.")
             AdjustModule.initialize(context)
         } else {
-            Log.e(LOG_TAG, "Adjust API key is missing.")
+            Log.e(LOG_TAG, "Adjust API key is missing or empty.")
         }
 
         if (!oneSignalApiKey.isNullOrEmpty()) {
+            Log.d(LOG_TAG, "Initializing OneSignal with API Key.")
             OneSignalModule.initialize(context)
         } else {
-            Log.e(LOG_TAG, "OneSignal API key is missing.")
+            Log.e(LOG_TAG, "OneSignal API key is missing or empty.")
         }
 
         if (!revenueCatApiKey.isNullOrEmpty()) {
+            Log.d(LOG_TAG, "Initializing RevenueCat with API Key.")
             RevenueCatModule.initialize(context, revenueCatApiKey)
         } else {
-            Log.e(LOG_TAG, "RevenueCat API key is missing. Skipping RevenueCat initialization.")
+            Log.e(LOG_TAG, "RevenueCat API key is missing or empty. Skipping RevenueCat initialization.")
         }
     }
 
