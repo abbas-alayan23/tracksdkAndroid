@@ -73,7 +73,7 @@ afterEvaluate {
                 from(components["release"])
                 groupId = "com.github.abbas-alayan23"
                 artifactId = "tracking-sdk"
-                version = "2.4"
+                version = "2.5"
             }
         }
     }

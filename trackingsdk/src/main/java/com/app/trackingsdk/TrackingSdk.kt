@@ -45,15 +45,23 @@ class TrackingSdk {
             val oneSignalApiKey = configMap["onesignal_api_key"]
             val revenueCatApiKey = configMap["revenuecat_api_key"]
 
-            // Initialize other SDKs that rely on these keys
+            // Initialize other SDKs that rely on these keys, only if keys are not null
             if (adjustApiKey != null) {
                 AdjustModule.initialize(context)
+            } else {
+                Log.e("TrackingSdk", "Adjust API key is missing.")
             }
+
             if (oneSignalApiKey != null) {
                 OneSignalModule.initialize(context)
+            } else {
+                Log.e("TrackingSdk", "OneSignal API key is missing.")
             }
+
             if (revenueCatApiKey != null) {
                 RevenueCatModule.initialize(context, revenueCatApiKey)
+            } else {
+                Log.e("TrackingSdk", "RevenueCat API key is missing. Skipping RevenueCat initialization.")
             }
 
             // Log initialization statuses and invoke the onComplete callback
