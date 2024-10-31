@@ -8,11 +8,14 @@ import com.app.trackingsdk.modules.FirebaseModule
 import com.app.trackingsdk.modules.OneSignalModule
 import com.app.trackingsdk.modules.RevenueCatModule
 import com.google.firebase.FirebaseOptions
+import com.google.firebase.analytics.FirebaseAnalytics
 
 class TrackingSdk {
 
     companion object {
         private const val LOG_TAG = "TrackingSdk"
+        private var firebaseAnalytics: FirebaseAnalytics? = null
+
     }
 
     fun initialize(
@@ -37,6 +40,8 @@ class TrackingSdk {
             .build()
 
         FirebaseModule.initialize(context, firebaseOptions) { configMap ->
+            firebaseAnalytics = FirebaseAnalytics.getInstance(context) // Initialize Firebase Analytics
+            onComplete()
             if (configMap.isNotEmpty()) {
                 Log.d(LOG_TAG, "Config map fetched successfully.")
                 initializeSDKs(context, configMap)
@@ -93,5 +98,9 @@ class TrackingSdk {
 
     fun getTermsLink(): String {
         return CoreModule.getTermsLinkUrl() ?: ""
+    }
+
+    fun logTestEvent(context: Context) {
+        firebaseAnalytics?.logEvent("test_event", null)
     }
 }
