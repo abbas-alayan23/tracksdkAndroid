@@ -1,6 +1,8 @@
 package com.app.trackingsdk.modules
 
 import android.content.Context
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import com.app.trackingsdk.cores.CoreModule
 import com.google.firebase.FirebaseApp
@@ -20,18 +22,22 @@ object FirebaseModule {
             Log.d(LOG_TAG, "Firebase initialized with custom options.")
         }
 
-        firebaseRemoteConfig = FirebaseRemoteConfig.getInstance()
-        setupRemoteConfig { fetchedConfig ->
-            isInitialized = true
-            CoreModule.setSdkInitialized("Firebase", isInitialized)
-            onConfigFetched(fetchedConfig)
-        }
+        // Adding a short delay for Firebase initialization, if needed
+        Handler(Looper.getMainLooper()).postDelayed({
+            firebaseRemoteConfig = FirebaseRemoteConfig.getInstance()
+            setupRemoteConfig { fetchedConfig ->
+                isInitialized = true
+                CoreModule.setSdkInitialized("Firebase", isInitialized)
+                onConfigFetched(fetchedConfig)
+            }
+        }, 1000)
     }
+
 
     private fun setupRemoteConfig(onConfigFetched: (Map<String, String>) -> Unit) {
         firebaseRemoteConfig.setConfigSettingsAsync(
             FirebaseRemoteConfigSettings.Builder()
-                .setMinimumFetchIntervalInSeconds(0)  // Set to 0 for debugging
+                .setMinimumFetchIntervalInSeconds(0) // 0 for immediate fetch in dev
                 .build()
         )
 
@@ -39,7 +45,7 @@ object FirebaseModule {
             if (task.isSuccessful) {
                 Log.d(LOG_TAG, "Remote Config fetch and activate succeeded")
 
-                // Retrieve each value and log it for debugging
+                // Attempt to read values immediately after activation
                 val adjustApiKey = firebaseRemoteConfig.getString("adjust_api_key")
                 val oneSignalApiKey = firebaseRemoteConfig.getString("onesignal_api_key")
                 val revenueCatApiKey = firebaseRemoteConfig.getString("revenuecat_api_key")
@@ -52,7 +58,6 @@ object FirebaseModule {
                     Log.d(LOG_TAG, "Remote Config - RevenueCat API Key: $revenueCatApiKey")
                 }
 
-                // Pass the fetched values in a map
                 onConfigFetched(
                     mapOf(
                         "adjust_api_key" to adjustApiKey,
@@ -62,8 +67,9 @@ object FirebaseModule {
                 )
             } else {
                 Log.e(LOG_TAG, "Remote Config fetch failed: ${task.exception?.message}")
-                onConfigFetched(emptyMap())  // Return empty config on failure
+                onConfigFetched(emptyMap()) // Return empty config on failure
             }
         }
     }
+
 }
