@@ -40,10 +40,10 @@ dependencies {
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
 
-    implementation(platform(libs.firebase.bom.v3210))
+    api(platform(libs.firebase.bom.v3210))
 
-    implementation(libs.firebase.config.ktx)
-    implementation("com.google.firebase:firebase-analytics-ktx")
+    api(libs.firebase.config.ktx)
+    api("com.google.firebase:firebase-analytics-ktx")
 
     implementation (libs.adjust.android)
     implementation (libs.installreferrer)
@@ -73,7 +73,7 @@ afterEvaluate {
                 from(components["release"])
                 groupId = "com.github.abbas-alayan23"
                 artifactId = "tracking-sdk"
-                version = "2.9"
+                version = "3.0"
             }
         }
     }
