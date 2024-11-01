@@ -5,71 +5,72 @@ import android.os.Handler
 import android.os.Looper
 import android.util.Log
 import com.app.trackingsdk.cores.CoreModule
+import com.google.firebase.Firebase
 import com.google.firebase.FirebaseApp
 import com.google.firebase.FirebaseOptions
 import com.google.firebase.remoteconfig.FirebaseRemoteConfig
+import com.google.firebase.remoteconfig.FirebaseRemoteConfigException
 import com.google.firebase.remoteconfig.FirebaseRemoteConfigSettings
+import com.google.firebase.remoteconfig.remoteConfig
+import com.google.firebase.remoteconfig.remoteConfigSettings
 
 object FirebaseModule {
-    private const val LOG_TAG = "FirebaseModule"
-    private var isInitialized = false
+    private const val TAG = "FirebaseModule"
+    private lateinit var remoteConfig: FirebaseRemoteConfig
 
-    private lateinit var firebaseRemoteConfig: FirebaseRemoteConfig
-
-    fun initialize(context: Context, firebaseOptions: FirebaseOptions, onConfigFetched: (Map<String, String>) -> Unit) {
+    // Initialize Firebase with optional custom options and configure Remote Config
+    fun initialize(context: Context, firebaseOptions: FirebaseOptions? = null, onComplete: (Map<String, String>) -> Unit) {
         if (FirebaseApp.getApps(context).isEmpty()) {
-            FirebaseApp.initializeApp(context, firebaseOptions)
-            Log.d(LOG_TAG, "Firebase initialized with custom options.")
+            firebaseOptions?.let {
+                FirebaseApp.initializeApp(context, it)
+            } ?: FirebaseApp.initializeApp(context)
+            Log.d(TAG, "Firebase initialized successfully.")
         }
 
-        // Adding a short delay for Firebase initialization, if needed
-        Handler(Looper.getMainLooper()).postDelayed({
-            firebaseRemoteConfig = FirebaseRemoteConfig.getInstance()
-            setupRemoteConfig { fetchedConfig ->
-                isInitialized = true
-                CoreModule.setSdkInitialized("Firebase", isInitialized)
-                onConfigFetched(fetchedConfig)
-            }
-        }, 1000)
+        // Configure Remote Config settings with a low fetch interval for testing
+        val configSettings = remoteConfigSettings {
+            minimumFetchIntervalInSeconds = 3600 // Set to 0 for development
+        }
+        remoteConfig = FirebaseRemoteConfig.getInstance()
+        remoteConfig.setConfigSettingsAsync(configSettings)
+
+        // Set default values for Remote Config
+        remoteConfig.setDefaultsAsync(mapOf(
+            "adjust_api_key" to "default_adjust_key",
+            "onesignal_api_key" to "default_onesignal_key",
+            "revenuecat_api_key" to "default_revenuecat_key"
+        ))
+
+        // Fetch and activate Remote Config values
+        fetchAndActivateConfig(onComplete)
     }
 
-
-    private fun setupRemoteConfig(onConfigFetched: (Map<String, String>) -> Unit) {
-        firebaseRemoteConfig.setConfigSettingsAsync(
-            FirebaseRemoteConfigSettings.Builder()
-                .setMinimumFetchIntervalInSeconds(0) // 0 for immediate fetch in dev
-                .build()
-        )
-
-        firebaseRemoteConfig.fetchAndActivate().addOnCompleteListener { task ->
-            if (task.isSuccessful) {
-                Log.d(LOG_TAG, "Remote Config fetch and activate succeeded")
-
-                // Attempt to read values immediately after activation
-                val adjustApiKey = firebaseRemoteConfig.getString("adjust_api_key")
-                val oneSignalApiKey = firebaseRemoteConfig.getString("onesignal_api_key")
-                val revenueCatApiKey = firebaseRemoteConfig.getString("revenuecat_api_key")
-
-                if (adjustApiKey.isEmpty() || oneSignalApiKey.isEmpty() || revenueCatApiKey.isEmpty()) {
-                    Log.e(LOG_TAG, "Some Remote Config values are missing or empty!")
+    private fun fetchAndActivateConfig(onComplete: (Map<String, String>) -> Unit) {
+        remoteConfig.fetchAndActivate()
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    Log.d(TAG, "Remote Config fetch and activate succeeded")
+                    onComplete(retrieveRemoteConfigValues())
                 } else {
-                    Log.d(LOG_TAG, "Remote Config - Adjust API Key: $adjustApiKey")
-                    Log.d(LOG_TAG, "Remote Config - OneSignal API Key: $oneSignalApiKey")
-                    Log.d(LOG_TAG, "Remote Config - RevenueCat API Key: $revenueCatApiKey")
+                    Log.e(TAG, "Fetch failed: ${task.exception?.message}")
+                    onComplete(emptyMap())
                 }
-
-                onConfigFetched(
-                    mapOf(
-                        "adjust_api_key" to adjustApiKey,
-                        "onesignal_api_key" to oneSignalApiKey,
-                        "revenuecat_api_key" to revenueCatApiKey
-                    )
-                )
-            } else {
-                Log.e(LOG_TAG, "Remote Config fetch failed: ${task.exception?.message}")
-                onConfigFetched(emptyMap()) // Return empty config on failure
             }
-        }
     }
 
+    private fun retrieveRemoteConfigValues(): Map<String, String> {
+        val adjustApiKey = remoteConfig.getString("adjust_api_key")
+        val oneSignalApiKey = remoteConfig.getString("onesignal_api_key")
+        val revenueCatApiKey = remoteConfig.getString("revenuecat_api_key")
+
+        Log.d(TAG, "Adjust API Key: $adjustApiKey")
+        Log.d(TAG, "OneSignal API Key: $oneSignalApiKey")
+        Log.d(TAG, "RevenueCat API Key: $revenueCatApiKey")
+
+        return mapOf(
+            "adjust_api_key" to adjustApiKey,
+            "onesignal_api_key" to oneSignalApiKey,
+            "revenuecat_api_key" to revenueCatApiKey
+        )
+    }
 }
