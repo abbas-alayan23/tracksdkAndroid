@@ -46,17 +46,19 @@ object FirebaseModule {
     }
 
     private fun fetchAndActivateConfig(onComplete: (Map<String, String>) -> Unit) {
-        remoteConfig.fetchAndActivate()
-            .addOnCompleteListener { task ->
-                if (task.isSuccessful) {
-                    Log.d(TAG, "Remote Config fetch and activate succeeded")
+        remoteConfig.fetchAndActivate().addOnCompleteListener { task ->
+            if (task.isSuccessful) {
+                Log.d(TAG, "Remote Config fetch and activate succeeded")
+                Handler(Looper.getMainLooper()).postDelayed({
                     onComplete(retrieveRemoteConfigValues())
-                } else {
-                    Log.e(TAG, "Fetch failed: ${task.exception?.message}")
-                    onComplete(emptyMap())
-                }
+                }, 500) // Adjust delay as needed
+            } else {
+                Log.e(TAG, "Fetch failed: ${task.exception?.message}")
+                onComplete(emptyMap())
             }
+        }
     }
+
 
     private fun retrieveRemoteConfigValues(): Map<String, String> {
         val adjustApiKey = remoteConfig.getString("adjust_sdk_key")

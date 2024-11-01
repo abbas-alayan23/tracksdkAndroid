@@ -59,10 +59,20 @@ class TrackingSdk {
     }
 
     private fun populateCoreModule(configMap: Map<String, String>) {
-        configMap["adjust_sdk_key"]?.let { CoreModule.setAdjustSdkKey(it) }
-        configMap["onesignal_api_key"]?.let { CoreModule.setOneSignalSdkKey(it) }
-        configMap["revenuecat_api_key"]?.let { CoreModule.setRevenueCatApiKey(it) }
+        configMap["adjust_sdk_key"]?.let {
+            CoreModule.setAdjustSdkKey(it)
+            Log.d(LOG_TAG, "Adjust SDK Key set in CoreModule: $it")
+        }
+        configMap["onesignal_api_key"]?.let {
+            CoreModule.setOneSignalSdkKey(it)
+            Log.d(LOG_TAG, "OneSignal API Key set in CoreModule: $it")
+        }
+        configMap["revenuecat_api_key"]?.let {
+            CoreModule.setRevenueCatApiKey(it)
+            Log.d(LOG_TAG, "RevenueCat API Key set in CoreModule: $it")
+        }
     }
+
 
     // Check if CoreModule has the necessary keys
     private fun areKeysPresentInCoreModule(): Boolean {
@@ -70,12 +80,17 @@ class TrackingSdk {
         val isOneSignalKeyPresent = !CoreModule.getOneSignalSdkKey().isNullOrEmpty()
         val isRevenueCatKeyPresent = !CoreModule.getRevenueCatApiKey().isNullOrEmpty()
 
+        Log.d(LOG_TAG, "CoreModule Adjust SDK Key: ${CoreModule.getAdjustSdkKey()}")
+        Log.d(LOG_TAG, "CoreModule OneSignal API Key: ${CoreModule.getOneSignalSdkKey()}")
+        Log.d(LOG_TAG, "CoreModule RevenueCat API Key: ${CoreModule.getRevenueCatApiKey()}")
+
         return isAdjustKeyPresent && isOneSignalKeyPresent && isRevenueCatKeyPresent
     }
 
+
     private fun initializeSDKs(context: Context, configMap: Map<String, String>) {
-        val adjustApiKey = configMap["adjust_api_key"]
-        val oneSignalApiKey = configMap["onesignal_api_key"]
+        val adjustApiKey = configMap["adjust_sdk_key"]
+        val oneSignalApiKey = configMap["onesignal_sdk_key"]
         val revenueCatApiKey = configMap["revenuecat_api_key"]
 
         if (!adjustApiKey.isNullOrEmpty()) {
