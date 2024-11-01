@@ -41,15 +41,14 @@ class TrackingSdk {
 
         FirebaseModule.initialize(context, firebaseOptions) { configMap ->
             firebaseAnalytics = FirebaseAnalytics.getInstance(context) // Initialize Firebase Analytics
-            onComplete()
-
             populateCoreModule(configMap)
 
-            if (configMap.isNotEmpty() && areKeysPresentInCoreModule()) {
+            // Ensure `initializeSDKs` is called only if all keys are set in CoreModule
+            if (areKeysPresentInCoreModule()) {
                 Log.d(LOG_TAG, "Config map and CoreModule populated successfully.")
                 initializeSDKs(context, configMap)
             } else {
-                Log.e(LOG_TAG, "Config map is empty or CoreModule is missing keys.")
+                Log.e(LOG_TAG, "CoreModule is missing keys, skipping SDK initialization.")
             }
 
             // Log initialization statuses
@@ -58,20 +57,24 @@ class TrackingSdk {
         }
     }
 
+
     private fun populateCoreModule(configMap: Map<String, String>) {
         configMap["adjust_sdk_key"]?.let {
             CoreModule.setAdjustSdkKey(it)
             Log.d(LOG_TAG, "Adjust SDK Key set in CoreModule: $it")
-        }
-        configMap["onesignal_api_key"]?.let {
+        } ?: Log.e(LOG_TAG, "Missing Adjust SDK Key.")
+
+        configMap["onesignal_sdk_key"]?.let {
             CoreModule.setOneSignalSdkKey(it)
             Log.d(LOG_TAG, "OneSignal API Key set in CoreModule: $it")
-        }
+        } ?: Log.e(LOG_TAG, "Missing OneSignal SDK Key.")
+
         configMap["revenuecat_api_key"]?.let {
             CoreModule.setRevenueCatApiKey(it)
             Log.d(LOG_TAG, "RevenueCat API Key set in CoreModule: $it")
-        }
+        } ?: Log.e(LOG_TAG, "Missing RevenueCat API Key.")
     }
+
 
 
     // Check if CoreModule has the necessary keys
