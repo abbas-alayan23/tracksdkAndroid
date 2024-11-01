@@ -4,6 +4,7 @@ import android.content.Context
 import android.util.Log
 import com.app.trackingsdk.cores.CoreModule
 import com.app.trackingsdk.modules.AdjustModule
+import com.app.trackingsdk.modules.FirebaseAnalyticsModule
 import com.app.trackingsdk.modules.FirebaseModule
 import com.app.trackingsdk.modules.OneSignalModule
 import com.app.trackingsdk.modules.RemoteConfigModule
@@ -13,9 +14,12 @@ import com.google.firebase.FirebaseOptions
 import com.google.firebase.analytics.FirebaseAnalytics
 
 class TrackingSdk {
+    private var analyticsModule: FirebaseAnalyticsModule? = null
+
 
     companion object {
         private const val LOG_TAG = "TrackingSdk"
+
     }
 
     fun initialize(
@@ -55,6 +59,11 @@ class TrackingSdk {
                 Log.e(LOG_TAG, "CoreModule is missing keys; SDK initialization skipped.")
             }
             onComplete()
+
+
+            analyticsModule = FirebaseAnalyticsModule(context)
+
+
         }
     }
 
@@ -75,5 +84,9 @@ class TrackingSdk {
             val isInitialized = CoreModule.isSdkInitialized(sdkName)
             Log.d(LOG_TAG, "$sdkName SDK initialized: $isInitialized")
         }
+    }
+
+    fun logEvent(eventName: String, params: Map<String, Any>) {
+        analyticsModule?.trackEvent(eventName, params)
     }
 }
