@@ -4,6 +4,8 @@ import android.util.Log
 import com.google.firebase.remoteconfig.FirebaseRemoteConfig
 import com.google.firebase.remoteconfig.FirebaseRemoteConfigSettings
 
+
+
 object RemoteConfigModule {
     private const val TAG = "RemoteConfigModule"
     private lateinit var remoteConfig: FirebaseRemoteConfig
@@ -11,13 +13,11 @@ object RemoteConfigModule {
     fun initialize(onComplete: (Map<String, String>) -> Unit) {
         remoteConfig = FirebaseRemoteConfig.getInstance()
 
-        // Configure Remote Config settings
         val configSettings = FirebaseRemoteConfigSettings.Builder()
-            .setMinimumFetchIntervalInSeconds(3600) // Set to 0 for development
+            .setMinimumFetchIntervalInSeconds(3600)
             .build()
         remoteConfig.setConfigSettingsAsync(configSettings)
 
-        // Set default values for Remote Config
         remoteConfig.setDefaultsAsync(mapOf(
             "adjust_sdk_key" to "default_adjust_key",
             "onesignal_sdk_key" to "default_onesignal_key",
@@ -45,5 +45,17 @@ object RemoteConfigModule {
             "onesignal_sdk_key" to remoteConfig.getString("onesignal_sdk_key"),
             "revenuecat_api_key" to remoteConfig.getString("revenuecat_api_key")
         )
+    }
+
+    // New method to retrieve a specific parameter by key and type
+    fun getConfigValue(key: String, type: Class<*>): Any? {
+        return when (type) {
+            Boolean::class.java -> remoteConfig.getBoolean(key)
+            String::class.java -> remoteConfig.getString(key)
+            Int::class.java -> remoteConfig.getLong(key).toInt()
+            Long::class.java -> remoteConfig.getLong(key)
+            Double::class.java -> remoteConfig.getDouble(key)
+            else -> null
+        }
     }
 }

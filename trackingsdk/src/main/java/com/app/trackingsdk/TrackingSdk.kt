@@ -89,4 +89,8 @@ class TrackingSdk {
     fun logEvent(eventName: String, params: Map<String, Any>) {
         analyticsModule?.trackEvent(eventName, params)
     }
+
+    fun getRemoteConfigValue(key: String, type: Class<*>): Any? {
+        return RemoteConfigModule.getConfigValue(key, type)
+    }
 }
