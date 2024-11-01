@@ -36,8 +36,8 @@ object FirebaseModule {
 
         // Set default values for Remote Config
         remoteConfig.setDefaultsAsync(mapOf(
-            "adjust_api_key" to "default_adjust_key",
-            "onesignal_api_key" to "default_onesignal_key",
+            "adjust_sdk_key" to "default_adjust_key",
+            "onesignal_sdk_key" to "default_onesignal_key",
             "revenuecat_api_key" to "default_revenuecat_key"
         ))
 
@@ -59,8 +59,8 @@ object FirebaseModule {
     }
 
     private fun retrieveRemoteConfigValues(): Map<String, String> {
-        val adjustApiKey = remoteConfig.getString("adjust_api_key")
-        val oneSignalApiKey = remoteConfig.getString("onesignal_api_key")
+        val adjustApiKey = remoteConfig.getString("adjust_sdk_key")
+        val oneSignalApiKey = remoteConfig.getString("onesignal_sdk_key")
         val revenueCatApiKey = remoteConfig.getString("revenuecat_api_key")
 
         Log.d(TAG, "Adjust API Key: $adjustApiKey")
@@ -68,8 +68,8 @@ object FirebaseModule {
         Log.d(TAG, "RevenueCat API Key: $revenueCatApiKey")
 
         return mapOf(
-            "adjust_api_key" to adjustApiKey,
-            "onesignal_api_key" to oneSignalApiKey,
+            "adjust_sdk_key" to adjustApiKey,
+            "onesignal_sdk_key" to oneSignalApiKey,
             "revenuecat_api_key" to revenueCatApiKey
         )
     }
