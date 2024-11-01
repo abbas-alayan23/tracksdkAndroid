@@ -42,15 +42,35 @@ class TrackingSdk {
         FirebaseModule.initialize(context, firebaseOptions) { configMap ->
             firebaseAnalytics = FirebaseAnalytics.getInstance(context) // Initialize Firebase Analytics
             onComplete()
-            if (configMap.isNotEmpty()) {
-                Log.d(LOG_TAG, "Config map fetched successfully.")
+
+            populateCoreModule(configMap)
+
+            if (configMap.isNotEmpty() && areKeysPresentInCoreModule()) {
+                Log.d(LOG_TAG, "Config map and CoreModule populated successfully.")
                 initializeSDKs(context, configMap)
             } else {
-                Log.e(LOG_TAG, "Config map is empty. Unable to initialize all SDKs.")
+                Log.e(LOG_TAG, "Config map is empty or CoreModule is missing keys.")
             }
+
+            // Log initialization statuses
             logInitializationStatuses()
             onComplete()
         }
+    }
+
+    private fun populateCoreModule(configMap: Map<String, String>) {
+        configMap["adjust_sdk_key"]?.let { CoreModule.setAdjustSdkKey(it) }
+        configMap["onesignal_api_key"]?.let { CoreModule.setOneSignalSdkKey(it) }
+        configMap["revenuecat_api_key"]?.let { CoreModule.setRevenueCatApiKey(it) }
+    }
+
+    // Check if CoreModule has the necessary keys
+    private fun areKeysPresentInCoreModule(): Boolean {
+        val isAdjustKeyPresent = !CoreModule.getAdjustSdkKey().isNullOrEmpty()
+        val isOneSignalKeyPresent = !CoreModule.getOneSignalSdkKey().isNullOrEmpty()
+        val isRevenueCatKeyPresent = !CoreModule.getRevenueCatApiKey().isNullOrEmpty()
+
+        return isAdjustKeyPresent && isOneSignalKeyPresent && isRevenueCatKeyPresent
     }
 
     private fun initializeSDKs(context: Context, configMap: Map<String, String>) {
@@ -92,13 +112,6 @@ class TrackingSdk {
         AdjustModule.sendEvent(eventToken)
     }
 
-    fun getPrivacyPolicyLink(): String {
-        return CoreModule.getPrivacyPolicyUrl() ?: ""
-    }
-
-    fun getTermsLink(): String {
-        return CoreModule.getTermsLinkUrl() ?: ""
-    }
 
     fun logTestEvent(context: Context) {
         firebaseAnalytics?.logEvent("test_event", null)

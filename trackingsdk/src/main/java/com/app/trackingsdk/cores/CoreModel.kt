@@ -8,6 +8,26 @@ object CoreModule {
     private val sdkInitStatus = mutableMapOf<String, Boolean>()
     private var termsLinkUrl :String? = null
     private var privacyPolicyUrl :String? = null
+    private var adjustSdKKey :String? = null
+    private var oneSignalSdkKey :String? = null
+    private var revenueCatApiKey :String? = null
+
+
+    fun setAdjustSdkKey(key: String) {
+        adjustSdKKey = key
+    }
+    fun getAdjustSdkKey(): String? = adjustSdKKey
+
+    fun setOneSignalSdkKey(key: String) {
+        oneSignalSdkKey = key
+    }
+    fun getOneSignalSdkKey(): String? = oneSignalSdkKey
+
+    fun setRevenueCatApiKey(key: String) {
+        revenueCatApiKey = key
+    }
+    fun getRevenueCatApiKey(): String? = revenueCatApiKey
+
 
     fun setSdkInitialized(sdkName: String, isInitialized: Boolean) {
         sdkInitStatus[sdkName] = isInitialized
